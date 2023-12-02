@@ -50,7 +50,7 @@ Default upgrade strategies are specified in the `values.yaml` file. Update these
 
 ### Configuration
 
-Refer the [Values file](./values.yaml) for all the possible config fields.
+Refer the [Values file](values.yaml) for all the possible config fields.
 
 You can specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
