@@ -5,11 +5,11 @@ global:
   # -- Overrides the priorityClassName for all pods
   priorityClassName: null
   # -- configures cluster domain ("cluster.local" by default)
-  clusterDomain: "cluster.local"
-  # -- configures DNS service name
-  dnsService: "kube-dns"
+  #  clusterDomain: "cluster.local"
+  #  # -- configures DNS service name
+  #  dnsService: kube-dns
   # -- configures DNS service namespace
-  dnsNamespace: "kube-system"
+  #dnsNamespace: "monitoring"
 # -- Overrides the chart's name
 nameOverride: null
 # -- Overrides the chart's computed fullname
@@ -244,7 +244,7 @@ loki:
     tracing:
       enabled: {{ .Values.loki.tracing.enabled }}
   # Should authentication be enabled
-  auth_enabled: true
+  auth_enabled: false
   # -- memberlist configuration (overrides embedded default)
   memberlistConfig: {}
   # -- Extra memberlist configuration
@@ -271,14 +271,14 @@ loki:
   # -- Storage config. Providing this will automatically populate all necessary storage configs in the templated config.
   storage:
     bucketNames:
-      chunks: chunks
-      ruler: ruler
-      admin: admin
+      chunks: loki-546419128141-ap-south-1
+      ruler: loki-546419128141-ap-south-1
+      admin: loki-546419128141-ap-south-1
     type: s3
     s3:
       s3: null
       endpoint: null
-      region: null
+      region: ap-south-1
       secretAccessKey: null
       accessKeyId: null
       signatureVersion: null
@@ -516,12 +516,13 @@ serviceAccount:
   create: true
   # -- The name of the ServiceAccount to use.
   # If not set and create is true, a name is generated using the fullname template
-  name: null
+  name: loki-sa
   # -- Image pull secrets for the service account
   imagePullSecrets: []
   # -- Annotations for the service account
   annotations: {}
   # -- Labels for the service account
+  eks.amazonaws.com/role-arn: "arn:aws:iam::546419128141:role/loki-546419128141-ap-south-1-iam_role"
   labels: {}
   # -- Set this toggle to false to opt out of automounting API credentials for the service account
   automountServiceAccountToken: true
@@ -1222,13 +1223,19 @@ singleBinary:
 # You'll need to supply authn configuration for your ingress controller.
 ingress:
   enabled: false
-  ingressClassName: ""
-  annotations: {}
-  #    nginx.ingress.kubernetes.io/auth-type: basic
-  #    nginx.ingress.kubernetes.io/auth-secret: loki-distributed-basic-auth
-  #    nginx.ingress.kubernetes.io/auth-secret-type: auth-map
-  #    nginx.ingress.kubernetes.io/configuration-snippet: |
-  #      proxy_set_header X-Scope-OrgID $remote_user;
+  ingressClassName: "alb"
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/group.name: "monitoring"
+    alb.ingress.kubernetes.io/tags: Environment=dev,Maintainer=DevOPS,BusinessUnit=ALL,App=Loki
+    alb.ingress.kubernetes.io/healthcheck-port: "3100"
+    alb.ingress.kubernetes.io/healthcheck-path: /ready
+    alb.ingress.kubernetes.io/success-codes: 200-399
+    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:ap-south-1:546419128141:certificate/83b0a651-d399-472a-b8be-0f4d20902d4a"
+    alb.ingress.kubernetes.io/security-groups: "dev-k8s-monitoring-sg, sg-0a33dbc5880075d4a"
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
+    alb.ingress.kubernetes.io/actions.ssl-redirect: '{"Type": "redirect", "RedirectConfig": { "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}'
   labels: {}
   #    blackbox.monitoring.exclude: "true"
   paths:
@@ -1255,7 +1262,8 @@ ingress:
       - /prometheus/api/v1/alerts
   # -- Hosts configuration for the ingress, passed through the `tpl` function to allow templating
   hosts:
-    - loki.example.com
+    - loki.prismforce.in
+    - loki-gatewaay.prismforce.in
   # -- TLS configuration for the ingress. Hosts passed through the `tpl` function to allow templating
   tls: []
 #    - hosts:
@@ -1271,7 +1279,7 @@ gateway:
   # -- Specifies whether the gateway should be enabled
   enabled: true
   # -- Number of replicas for the gateway
-  replicas: 1
+  replicas: 2
   # -- Enable logging of 2xx and 3xx HTTP requests
   verboseLogging: true
   autoscaling:
@@ -1384,30 +1392,42 @@ gateway:
     loadBalancerIP: null
     # -- Annotations for the gateway service
     annotations: {}
-    # -- Labels for gateway service
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/security-groups: "dev-k8s-monitoring-sg"
     labels: {}
   # Gateway ingress configuration
   ingress:
     # -- Specifies whether an ingress for the gateway should be created
-    enabled: false
+    enabled: true
     # -- Ingress Class Name. MAY be required for Kubernetes versions >= 1.18
-    ingressClassName: ""
+    ingressClassName: "alb"
     # -- Annotations for the gateway ingress
-    annotations: {}
-    # -- Labels for the gateway ingress
+    annotations:
+      # -- Labels for the gateway ingress
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      kubernetes.io/ingress.class: alb
+      alb.ingress.kubernetes.io/group.name: "monitoring"
+      alb.ingress.kubernetes.io/tags: Environment=dev,Maintainer=DevOPS,BusinessUnit=ALL,App=Loki
+      alb.ingress.kubernetes.io/healthcheck-port: "80"
+      alb.ingress.kubernetes.io/healthcheck-path: /ready
+      alb.ingress.kubernetes.io/success-codes: 200-399
+      alb.ingress.kubernets.io/taget-type: ip
+      alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:ap-south-1:546419128141:certificate/83b0a651-d399-472a-b8be-0f4d20902d4a"
+      alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
+      alb.ingress.kubernetes.io/actions.ssl-redirect: '{"Type": "redirect", "RedirectConfig": { "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}'
     labels: {}
     # -- Hosts configuration for the gateway ingress, passed through the `tpl` function to allow templating
     hosts:
-      - host: gateway.loki.example.com
+      - host: loki-gateway.prismforce.in
         paths:
           - path: /
-            # -- pathType (e.g. ImplementationSpecific, Prefix, .. etc.) might also be required by some Ingress Controllers
-            # pathType: Prefix
+            #            # -- pathType (e.g. ImplementationSpecific, Prefix, .. etc.) might also be required by some Ingress Controllers
+            pathType: Prefix
     # -- TLS configuration for the gateway ingress. Hosts passed through the `tpl` function to allow templating
-    tls:
-      - secretName: loki-gateway-tls
-        hosts:
-          - gateway.loki.example.com
+  #    tls:
+  #      - secretName: loki-gateway-tls
+  #        hosts:
+  #          - gateway.loki.example.com
   # Basic auth configuration
   basicAuth:
     # -- Enables basic authentication for the gateway
@@ -1607,3 +1627,4 @@ sidecar:
     watchClientTimeout: 60
     # -- Log level of the sidecar container.
     logLevel: INFO
+
