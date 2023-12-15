@@ -5,11 +5,11 @@ global:
   # -- Overrides the priorityClassName for all pods
   priorityClassName: null
   # -- configures cluster domain ("cluster.local" by default)
-  #  clusterDomain: "cluster.local"
-  #  # -- configures DNS service name
-  #  dnsService: kube-dns
+  clusterDomain: "cluster.local"
+#  # -- configures DNS service name
+  dnsService: "kube-dns"
   # -- configures DNS service namespace
-  #dnsNamespace: "monitoring"
+  dnsNamespace: "kube-system"
 # -- Overrides the chart's name
 nameOverride: null
 # -- Overrides the chart's computed fullname
@@ -159,7 +159,7 @@ loki:
     {{- else }}
     schema_config:
       configs:
-        - from: 2022-01-11
+        - from: 2023-12-01
           store: boltdb-shipper
           object_store: {{ .Values.loki.storage.type }}
           schema: v12
@@ -195,8 +195,6 @@ loki:
             timeout: {{ .timeout }}
       {{- end }}
     {{- end }}
-
-    {{- with .Values.loki.storage_config }}
     storage_config:
       {{- tpl (. | toYaml) $ | nindent 4 }}
     {{- end }}
@@ -266,7 +264,7 @@ loki:
   # -- Check https://grafana.com/docs/loki/latest/configuration/#common_config for more info on how to provide a common configuration
   commonConfig:
     path_prefix: /var/loki
-    replication_factor: 3
+    replication_factor: 1
     compactor_address: '{{ include "loki.compactorAddress" . }}'
   # -- Storage config. Providing this will automatically populate all necessary storage configs in the templated config.
   storage:
@@ -276,15 +274,7 @@ loki:
       admin: loki-546419128141-ap-south-1
     type: s3
     s3:
-      s3: null
-      endpoint: null
       region: ap-south-1
-      secretAccessKey: null
-      accessKeyId: null
-      signatureVersion: null
-      s3ForcePathStyle: false
-      insecure: false
-      http_config: {}
     gcs:
       chunkBufferSize: 0
       requestTimeout: "0s"
@@ -339,7 +329,11 @@ loki:
   # -- Check https://grafana.com/docs/loki/latest/configuration/#schema_config for more info on how to configure schemas
   schemaConfig: {}
   # -- Check https://grafana.com/docs/loki/latest/configuration/#ruler for more info on configuring ruler
-  rulerConfig: {}
+  rulerConfig:
+    storage:
+      type: local
+      local:
+        directory: /var/loki/rules
   # -- Structured loki configuration, takes precedence over `loki.config`, `loki.schemaConfig`, `loki.storageConfig`
   structuredConfig: {}
   # -- Additional query scheduler config
@@ -351,7 +345,13 @@ loki:
       max_per_second: 20
       up_to: 3
   # --  Optional compactor configuration
-  compactor: {}
+  compactor:
+    apply_retention_interval: 1h
+    compaction_interval: 5m
+    retention_delete_worker_count: 500
+    retention_enabled: true
+    shared_store: s3
+    working_directory: /tmp/compactor
   # --  Optional analytics configuration
   analytics: {}
   # --  Optional querier configuration
@@ -520,9 +520,9 @@ serviceAccount:
   # -- Image pull secrets for the service account
   imagePullSecrets: []
   # -- Annotations for the service account
-  annotations: {}
+  annotations:
   # -- Labels for the service account
-  eks.amazonaws.com/role-arn: "arn:aws:iam::546419128141:role/loki-546419128141-ap-south-1-iam_role"
+    eks.amazonaws.com/role-arn: "arn:aws:iam::546419128141:role/dev-eks-cluster_monitoring_iam_role"
   labels: {}
   # -- Set this toggle to false to opt out of automounting API credentials for the service account
   automountServiceAccountToken: true
@@ -542,9 +542,9 @@ rbac:
   namespaced: false
 # -- Section for configuring optional Helm test
 test:
-  enabled: true
+  enabled: false
   # -- Address of the prometheus server to query for the test
-  prometheusAddress: "http://prometheus:9090"
+  prometheusAddress: "http://prometheus-server"
   # -- Number of times to retry the test before failing
   timeout: 1m
   # -- Additional labels for the test pods
@@ -568,7 +568,7 @@ monitoring:
   # Dashboards for monitoring Loki
   dashboards:
     # -- If enabled, create configmap with dashboards for monitoring Loki
-    enabled: true
+    enabled: false
     # -- Alternative namespace to create dashboards ConfigMap in
     namespace: null
     # -- Additional annotations for the dashboards ConfigMap
@@ -579,7 +579,7 @@ monitoring:
   # Recording rules for monitoring Loki, required for some dashboards
   rules:
     # -- If enabled, create PrometheusRule resource with Loki recording rules
-    enabled: true
+    enabled: false
     # -- Include alerting rules
     alerting: true
     # -- Alternative namespace to create PrometheusRule resources in
@@ -603,7 +603,7 @@ monitoring:
   # ServiceMonitor configuration
   serviceMonitor:
     # -- If enabled, ServiceMonitor resources for Prometheus Operator are created
-    enabled: true
+    enabled: false
     # -- Namespace selector for ServiceMonitor resources
     namespaceSelector: {}
     # -- ServiceMonitor annotations
@@ -642,7 +642,7 @@ monitoring:
   # It will create custom resources for GrafanaAgent, LogsInstance, and PodLogs to configure
   # scrape configs to scrape its own logs with the labels expected by the included dashboards.
   selfMonitoring:
-    enabled: true
+    enabled: false
     # -- Tenant to use for self monitoring
     tenant:
       # -- Name of the tenant
@@ -655,7 +655,7 @@ monitoring:
       # -- Controls whether to install the Grafana Agent Operator and its CRDs.
       # Note that helm will not install CRDs if this flag is enabled during an upgrade.
       # In that case install the CRDs manually from https://github.com/grafana/agent/tree/main/production/operator/crds
-      installOperator: true
+      installOperator: false
       # -- Grafana Agent annotations
       annotations: {}
       # -- Additional Grafana Agent labels
@@ -688,7 +688,7 @@ monitoring:
   # The Loki canary pushes logs to and queries from this loki installation to test
   # that it's working correctly
   lokiCanary:
-    enabled: true
+    enabled: false
     # -- The name of the label to look for at loki when doing the checks.
     labelname: pod
     # -- Additional annotations for the `loki-canary` Daemonset
@@ -739,13 +739,13 @@ write:
   replicas: 3
   autoscaling:
     # -- Enable autoscaling for the write.
-    enabled: false
+    enabled: true
     # -- Minimum autoscaling replicas for the write.
-    minReplicas: 2
+    minReplicas: 3
     # -- Maximum autoscaling replicas for the write.
     maxReplicas: 6
     # -- Target CPU utilisation percentage for the write.
-    targetCPUUtilizationPercentage: 60
+    targetCPUUtilizationPercentage: 80
     # -- Target memory utilization percentage for the write.
     targetMemoryUtilizationPercentage:
     # -- Behavior policies while scaling.
@@ -924,13 +924,13 @@ read:
   replicas: 3
   autoscaling:
     # -- Enable autoscaling for the read, this is only used if `queryIndex.enabled: true`
-    enabled: false
+    enabled: true
     # -- Minimum autoscaling replicas for the read
-    minReplicas: 2
+    minReplicas: 3
     # -- Maximum autoscaling replicas for the read
     maxReplicas: 6
     # -- Target CPU utilisation percentage for the read
-    targetCPUUtilizationPercentage: 60
+    targetCPUUtilizationPercentage: 80
     # -- Target memory utilisation percentage for the read
     targetMemoryUtilizationPercentage:
     # -- Behavior policies while scaling.
@@ -1029,13 +1029,13 @@ backend:
   replicas: 3
   autoscaling:
     # -- Enable autoscaling for the backend.
-    enabled: false
+    enabled: true
     # -- Minimum autoscaling replicas for the backend.
     minReplicas: 2
     # -- Maximum autoscaling replicas for the backend.
     maxReplicas: 6
     # -- Target CPU utilization percentage for the backend.
-    targetCPUUtilizationPercentage: 60
+    targetCPUUtilizationPercentage: 80
     # -- Target memory utilization percentage for the backend.
     targetMemoryUtilizationPercentage:
     # -- Behavior policies while scaling.
@@ -1273,42 +1273,42 @@ ingress:
 # Configuration for the memberlist service
 memberlist:
   service:
-    publishNotReadyAddresses: false
+    publishNotReadyAddresses: true
 # Configuration for the gateway
 gateway:
   # -- Specifies whether the gateway should be enabled
-  enabled: true
+  enabled: false
   # -- Number of replicas for the gateway
-  replicas: 2
+  replicas: 1
   # -- Enable logging of 2xx and 3xx HTTP requests
   verboseLogging: true
   autoscaling:
     # -- Enable autoscaling for the gateway
-    enabled: false
+    enabled: true
     # -- Minimum autoscaling replicas for the gateway
     minReplicas: 1
     # -- Maximum autoscaling replicas for the gateway
     maxReplicas: 3
     # -- Target CPU utilisation percentage for the gateway
-    targetCPUUtilizationPercentage: 60
+    targetCPUUtilizationPercentage: 80
     # -- Target memory utilisation percentage for the gateway
     targetMemoryUtilizationPercentage:
     # -- See `kubectl explain deployment.spec.strategy` for more
     # -- ref: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy
     # -- Behavior policies while scaling.
-    behavior: {}
-    #    scaleUp:
-    #     stabilizationWindowSeconds: 300
-    #     policies:
-    #     - type: Pods
-    #       value: 1
-    #       periodSeconds: 60
-    #    scaleDown:
-    #     stabilizationWindowSeconds: 300
-    #     policies:
-    #     - type: Pods
-    #       value: 1
-    #       periodSeconds: 180
+    behavior:
+      scaleUp:
+       stabilizationWindowSeconds: 300
+       policies:
+       - type: Pods
+         value: 1
+         periodSeconds: 60
+      scaleDown:
+       stabilizationWindowSeconds: 300
+       policies:
+       - type: Pods
+         value: 1
+         periodSeconds: 180
   deploymentStrategy:
     type: RollingUpdate
   image:
@@ -1391,27 +1391,26 @@ gateway:
     # -- Load balancer IPO address if service type is LoadBalancer
     loadBalancerIP: null
     # -- Annotations for the gateway service
-    annotations: {}
-    alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/security-groups: "dev-k8s-monitoring-sg"
+    annotations:
+      alb.ingress.kubernetes.io/target-type: ip
+      alb.ingress.kubernetes.io/security-groups: "dev-k8s-monitoring-sg"
     labels: {}
   # Gateway ingress configuration
   ingress:
     # -- Specifies whether an ingress for the gateway should be created
-    enabled: true
+    enabled: false
     # -- Ingress Class Name. MAY be required for Kubernetes versions >= 1.18
-    ingressClassName: "alb"
+#    ingressClassName: "alb"
     # -- Annotations for the gateway ingress
     annotations:
-      # -- Labels for the gateway ingress
+    # -- Labels for the gateway ingress
       alb.ingress.kubernetes.io/scheme: internet-facing
       kubernetes.io/ingress.class: alb
       alb.ingress.kubernetes.io/group.name: "monitoring"
-      alb.ingress.kubernetes.io/tags: Environment=dev,Maintainer=DevOPS,BusinessUnit=ALL,App=Loki
-      alb.ingress.kubernetes.io/healthcheck-port: "80"
-      alb.ingress.kubernetes.io/healthcheck-path: /ready
+      alb.ingress.kubernetes.io/tags: Environment=dev,Maintainer=DevOPS,BusinessUnit=ALL,App=Grafana
+      alb.ingress.kubernetes.io/healthcheck-port: "8080"
+      alb.ingress.kubernetes.io/healthcheck-path: /
       alb.ingress.kubernetes.io/success-codes: 200-399
-      alb.ingress.kubernets.io/taget-type: ip
       alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:ap-south-1:546419128141:certificate/83b0a651-d399-472a-b8be-0f4d20902d4a"
       alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
       alb.ingress.kubernetes.io/actions.ssl-redirect: '{"Type": "redirect", "RedirectConfig": { "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}'
@@ -1421,13 +1420,13 @@ gateway:
       - host: loki-gateway.prismforce.in
         paths:
           - path: /
-            #            # -- pathType (e.g. ImplementationSpecific, Prefix, .. etc.) might also be required by some Ingress Controllers
+#            # -- pathType (e.g. ImplementationSpecific, Prefix, .. etc.) might also be required by some Ingress Controllers
             pathType: Prefix
     # -- TLS configuration for the gateway ingress. Hosts passed through the `tpl` function to allow templating
-  #    tls:
-  #      - secretName: loki-gateway-tls
-  #        hosts:
-  #          - gateway.loki.example.com
+#    tls:
+#      - secretName: loki-gateway-tls
+#        hosts:
+#          - gateway.loki.example.com
   # Basic auth configuration
   basicAuth:
     # -- Enables basic authentication for the gateway
@@ -1599,7 +1598,7 @@ sidecar:
   livenessProbe: {}
   rules:
     # -- Whether or not to create a sidecar to ingest rule from specific ConfigMaps and/or Secrets.
-    enabled: true
+    enabled: false
     # -- Label that the configmaps/secrets with rules will be marked with.
     label: loki_rule
     # -- Label value that the configmaps/secrets with rules will be set to.

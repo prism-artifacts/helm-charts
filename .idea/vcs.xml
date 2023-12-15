@@ -2,6 +2,7 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../../prismforce/integration-microservice" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/../../prismforce/kubernetes-manifests" vcs="Git" />
   </component>
 </project>
