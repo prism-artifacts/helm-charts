@@ -5,6 +5,7 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/helm-charts.iml" filepath="$PROJECT_DIR$/.idea/helm-charts.iml" />
       <module fileurl="file://$PROJECT_DIR$/../../prismforce/integration-microservice/.idea/integration-microservice.iml" filepath="$PROJECT_DIR$/../../prismforce/integration-microservice/.idea/integration-microservice.iml" />
       <module fileurl="file://$PROJECT_DIR$/../../prismforce/kubernetes-manifests/.idea/kubernetes-manifests.iml" filepath="$PROJECT_DIR$/../../prismforce/kubernetes-manifests/.idea/kubernetes-manifests.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../../prismforce/sms_qa_automation/.idea/sms_qa_automation.iml" filepath="$PROJECT_DIR$/../../prismforce/sms_qa_automation/.idea/sms_qa_automation.iml" />
     </modules>
   </component>
 </project>

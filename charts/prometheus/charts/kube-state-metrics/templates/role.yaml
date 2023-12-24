@@ -39,10 +39,10 @@ rules:
   - daemonsets
   verbs: ["list", "watch"]
 {{ end -}}
-{{ if has "deployments" $.Values.collectors }}
+{{ if has "deployment.yaml" $.Values.collectors }}
 - apiGroups: ["extensions", "apps"]
   resources:
-  - deployments
+  - deployment.yaml
   verbs: ["list", "watch"]
 {{ end -}}
 {{ if has "endpoints" $.Values.collectors }}

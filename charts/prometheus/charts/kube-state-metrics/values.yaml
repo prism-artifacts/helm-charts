@@ -313,7 +313,7 @@ collectors:
   - configmaps
   - cronjobs
   - daemonsets
-  - deployments
+  - deployment.yaml
   - endpoints
   - horizontalpodautoscalers
   - ingresses

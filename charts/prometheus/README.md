@@ -219,7 +219,7 @@ Version 15.0.0 changes the relabeling config, aligning it with the [Prometheus c
 Before you update please execute the following command, to be able to update kube-state-metrics:
 
 ```bash
-kubectl delete deployments.apps -l app.kubernetes.io/instance=prometheus,app.kubernetes.io/name=kube-state-metrics --cascade=orphan
+kubectl delete deployment.yaml.apps -l app.kubernetes.io/instance=prometheus,app.kubernetes.io/name=kube-state-metrics --cascade=orphan
 ```
 
 ### To 9.0

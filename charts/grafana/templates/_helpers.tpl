@@ -51,7 +51,7 @@ Create the name of the service account
 {{- end }}
 
 {{/*
-Allow the release namespace to be overridden for multi-namespace deployments in combined charts
+Allow the release namespace to be overridden for multi-namespace deployment.yaml in combined charts
 */}}
 {{- define "grafana.namespace" -}}
 {{- if .Values.namespaceOverride }}

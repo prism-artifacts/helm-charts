@@ -290,7 +290,7 @@ rbac:
   pspEnabled: true
   pspAnnotations: {}
 
-# for deployments that have node_exporter deployed outside of the cluster, list
+# for deployment.yaml that have node_exporter deployed outside of the cluster, list
 # their addresses here
 endpoints: []
 

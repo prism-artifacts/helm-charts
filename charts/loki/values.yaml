@@ -50,7 +50,7 @@ loki:
     digest: null
     # -- Docker image pull policy
     pullPolicy: IfNotPresent
-  # -- Common annotations for all deployments/StatefulSets
+  # -- Common annotations for all deployment.yaml/StatefulSets
   annotations: {}
   # -- Common annotations for all pods
   podAnnotations: {}
