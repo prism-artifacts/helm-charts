@@ -1,0 +1,20 @@
+{{- if .Values.persistence.enabled }}
+# Persistent Volume Claim
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{.Chart.Name}}-controller-home
+  labels:
+  {{- include "..labels" . | nindent 4 }}
+{{- if .Values.persistence.annotations }}
+  annotations:
+{{ toYaml .Values.persistence.annotations | indent 4 }}
+{{- end }}
+spec:
+  storageClassName: {{.Values.storage.home.storageClass}}
+  accessModes:
+    - {{.Values.storage.home.accessMode}}
+  resources:
+    requests:
+      storage: {{.Values.storage.home.size}}
+{{- end}}

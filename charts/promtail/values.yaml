@@ -133,7 +133,7 @@ priorityClassName: null
 livenessProbe: {}
 
 # -- Readiness probe
-# @default -- See `values.yaml`
+# @default -- See `jenkins.yaml`
 readinessProbe:
   failureThreshold: 5
   httpGet:
@@ -204,7 +204,7 @@ tolerations:
 
 # -- Default volumes that are mounted into pods. In most cases, these should not be changed.
 # Use `extraVolumes`/`extraVolumeMounts` for additional custom volumes.
-# @default -- See `values.yaml`
+# @default -- See `jenkins.yaml`
 defaultVolumes:
   - name: run
     hostPath:
@@ -217,7 +217,7 @@ defaultVolumes:
       path: /var/log/pods
 
 # -- Default volume mounts. Corresponds to `volumes`.
-# @default -- See `values.yaml`
+# @default -- See `jenkins.yaml`
 defaultVolumeMounts:
   - name: run
     mountPath: /run/promtail
@@ -327,7 +327,7 @@ extraContainers: {}
   #   ...
 
 # -- Configure additional ports and services. For each configured port, a corresponding service is created.
-# See values.yaml for details
+# See jenkins.yaml for details
 extraPorts: {}
 #  syslog:
 #    name: tcp-syslog
@@ -363,7 +363,7 @@ extraPorts: {}
 
 
 # -- PodSecurityPolicy configuration.
-# @default -- See `values.yaml`
+# @default -- See `jenkins.yaml`
 podSecurityPolicy:
   privileged: true
   allowPrivilegeEscalation: true
@@ -388,28 +388,28 @@ podSecurityPolicy:
 
 # -- Section for crafting Promtails config file. The only directly relevant value is `config.file`
 # which is a templated string that references the other values and snippets below this key.
-# @default -- See `values.yaml`
+# @default -- See `jenkins.yaml`
 config:
   # -- Enable Promtail config from Helm chart
   # Set `configmap.enabled: true` and this to `false` to manage your own Promtail config
-  # See default config in `values.yaml`
+  # See default config in `jenkins.yaml`
   enabled: true
   # -- The log level of the Promtail server
   # Must be reference in `config.file` to configure `server.log_level`
-  # See default config in `values.yaml`
+  # See default config in `jenkins.yaml`
   logLevel: info
   # -- The log format of the Promtail server
   # Must be reference in `config.file` to configure `server.log_format`
   # Valid formats: `logfmt, json`
-  # See default config in `values.yaml`
+  # See default config in `jenkins.yaml`
   logFormat: logfmt
   # -- The port of the Promtail server
   # Must be reference in `config.file` to configure `server.http_listen_port`
-  # See default config in `values.yaml`
+  # See default config in `jenkins.yaml`
   serverPort: 3101
   # -- The config of clients of the Promtail server
   # Must be reference in `config.file` to configure `clients`
-  # @default -- See `values.yaml`
+  # @default -- See `jenkins.yaml`
   clients:
     - url: http://loki-gateway/loki/api/v1/push
   # -- Configures where Promtail will save it's positions file, to resume reading after restarts.
@@ -421,7 +421,7 @@ config:
   # -- A section of reusable snippets that can be reference in `config.file`.
   # Custom snippets may be added in order to reduce redundancy.
   # This is especially helpful when multiple `kubernetes_sd_configs` are use which usually have large parts in common.
-  # @default -- See `values.yaml`
+  # @default -- See `jenkins.yaml`
   snippets:
     pipelineStages:
       - cri: {}
@@ -530,7 +530,7 @@ config:
   # -- Config file contents for Promtail.
   # Must be configured as string.
   # It is templated so it can be assembled from reusable snippets in order to avoid redundancy.
-  # @default -- See `values.yaml`
+  # @default -- See `jenkins.yaml`
   file: |
     server:
       log_level: {{ .Values.config.logLevel }}

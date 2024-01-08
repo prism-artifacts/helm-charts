@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "..controller-name" . }}
+  {{- with .Values.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  selector:
+    {{- include "..selectorLabels" . | nindent 4 }}
+  type: {{.Values.service.type }}
+  ports:
+    - name: http
+      protocol: TCP
+      port: {{ .Values.service.port}}
+      targetPort: {{ .Values.service.port}}
+    - name: jnlp
+      protocol: TCP
+      port: {{ .Values.service.jnlp_port}}
+      targetPort: {{ .Values.service.jnlp_port}}

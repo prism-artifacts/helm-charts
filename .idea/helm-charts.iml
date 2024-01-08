@@ -7,6 +7,5 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="kubernetes-manifests" />
     <orderEntry type="module" module-name="integration-microservice" />
-    <orderEntry type="module" module-name="sms_qa_automation" />
   </component>
 </module>

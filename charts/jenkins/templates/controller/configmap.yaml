@@ -1,0 +1,13 @@
+{{- if .Values.configmap.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{.Chart.Name}}-env-config
+  labels:
+  {{- include "..labels" . | nindent 4 }}
+data:
+{{- range $key, $value := .Values.configmap.env }}
+  {{ toYaml $key }} : {{ toYaml $value | trimSuffix "\n" | indent 4}}
+{{- end }}
+  NAMESPACE: "{{ .Release.Namespace }}"
+{{- end }}

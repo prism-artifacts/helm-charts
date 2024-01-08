@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{.Chart.Name}}-controller
+  labels:
+    {{- include "..labels" . | nindent 4}}
+    "app.kubernetes.io/component": "{{ .Values.controller.componentName }}"
+spec:
+  replicas: {{.Values.replicaCount}}
+  selector:
+    matchLabels:
+      {{- include "..selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "..selectorLabels" . | nindent 8}}
+      {{- with .Values.podLabels }}
+       {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      serviceAccountName: {{ include "jenkins.serviceAccountName" . }}
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 1000
+      volumes:
+        - name: jenkins-home
+          persistentVolumeClaim:
+            claimName: {{.Chart.Name}}-controller-home
+        - name: jenkins-jobs
+          persistentVolumeClaim:
+            claimName: {{.Chart.Name}}-controller-jobs
+      containers:
+        - name: {{.Chart.Name}}
+          image: {{.Values.controller.image}}:{{.Values.controller.tagLabel}}
+          imagePullPolicy: {{ .Values.controller.imagePullPolicy }}
+          resources:
+            limits:
+              memory: "2Gi"
+              cpu: "1000m"
+            requests:
+              memory: "500Mi"
+              cpu: "500m"
+          envFrom:
+            - configMapRef:
+                name: {{.Chart.Name}}-env-config
+          ports:
+            - name: http
+              containerPort: {{.Values.service.port}}
+            - name: jnlp
+              containerPort: {{ .Values.service.jnlp_port}}
+          livenessProbe:
+            httpGet:
+              path: "/login"
+              port: {{.Values.service.port}}
+            initialDelaySeconds: 90
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: "/login"
+              port: {{.Values.service.port}}
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: jenkins-home
+              mountPath: /var/jenkins_home
+            - name: jenkins-jobs
+              mountPath: /var/jenkins_home/jobs
+
+

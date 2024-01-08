@@ -303,7 +303,7 @@ You should adjust `prometheus.io/path` based on the URL that your pod serves met
 Note that when [installing](#install-chart) or [upgrading](#upgrading-chart) you may use multiple values override files. This is particularly useful when you have alerts belonging to multiple services in the cluster. For example,
 
 ```yaml
-# values.yaml
+# jenkins.yaml
 # ...
 
 # service1-alert.yaml

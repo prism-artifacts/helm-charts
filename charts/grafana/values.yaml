@@ -720,7 +720,7 @@ dashboards: {}
   #     acceptHeader: '*/*'
 
 ## Reference to external ConfigMap per provider. Use provider name as key and ConfigMap name as value.
-## A provider dashboards must be defined either by external ConfigMaps or in values.yaml, not in both.
+## A provider dashboards must be defined either by external ConfigMaps or in jenkins.yaml, not in both.
 ## ConfigMap data example:
 ##
 ## data:

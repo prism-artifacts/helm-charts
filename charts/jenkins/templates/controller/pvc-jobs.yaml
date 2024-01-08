@@ -1,0 +1,20 @@
+{{- if .Values.persistence.enabled }}
+# Persistent Volume Claim
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{.Chart.Name}}-controller-jobs
+  labels:
+  {{- include "..labels" . | nindent 4 }}
+{{- if .Values.persistence.annotations }}
+  annotations:
+{{ toYaml .Values.persistence.annotations | indent 4 }}
+{{- end }}
+spec:
+  storageClassName: {{.Values.storage.jobs.storageClass}}
+  accessModes:
+    - {{.Values.storage.jobs.accessMode}}
+  resources:
+    requests:
+      storage: {{.Values.storage.jobs.size}}
+{{- end}}

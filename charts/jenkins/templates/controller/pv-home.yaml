@@ -1,0 +1,14 @@
+{{- if .Values.storage.creation }}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{.Chart.Name}}-{{.Values.storage.home.name}}
+spec:
+  accessModes:
+    - {{.Values.storage.home.storageClass}}
+  capacity:
+    storage: {{.Values.storage.home.size}}
+  persistentVolumeReclaimPolicy: {{.Values.storage.home.accessMode}}
+  hostPath:
+    path: "/data/{{.Values.storage.home.name}}"
+{{- end}}

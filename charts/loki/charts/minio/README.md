@@ -63,7 +63,7 @@ The above command deploys MinIO server with a 1Ti backing persistent volume.
 Alternately, you can provide a YAML file that specifies parameter values while installing the chart. For example,
 
 ```bash
-helm install --name my-release -f values.yaml minio/minio
+helm install --name my-release -f jenkins.yaml minio/minio
 ```
 
 ### Persistence

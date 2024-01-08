@@ -1,0 +1,14 @@
+{{- if .Values.storage.creation }}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{.Chart.Name}}-{{.Values.storage.jobs.name}}
+spec:
+  accessModes:
+    - {{.Values.storage.jobs.storageClass}}
+  capacity:
+    storage: {{.Values.storage.jobs.size}}
+  persistentVolumeReclaimPolicy: {{.Values.storage.jobs.accessMode}}
+  hostPath:
+    path: "/data/{{.Values.storage.jobs.name}}"
+{{- end}}

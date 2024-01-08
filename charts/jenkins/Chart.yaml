@@ -1,0 +1,11 @@
+apiVersion: v2
+description: Helm chart for Jenkins master and agent
+home: https://prism-artifacts.github.io/helm-charts
+maintainers:
+- name: rajeshj-prismforce
+name: jenkins
+sources:
+  - https://prism-artifacts.github.io/jenkins
+type: application
+version: 0.0.1
+appVersion: master

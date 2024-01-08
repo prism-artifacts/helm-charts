@@ -4,6 +4,5 @@
     <mapping directory="" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/../../prismforce/integration-microservice" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/../../prismforce/kubernetes-manifests" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../../prismforce/sms_qa_automation" vcs="Git" />
   </component>
 </project>
